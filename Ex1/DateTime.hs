@@ -14,20 +14,20 @@ data DateTime = DateTime { date :: Date
 data Date = Date { year  :: Year
                  , month :: Month
                  , day   :: Day }
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
-newtype Year  = Year { unYear :: Int }  deriving (Eq, Ord)
-newtype Month = Month { unMonth :: Int } deriving (Eq, Ord)
-newtype Day   = Day { unDay :: Int } deriving (Eq, Ord)
+newtype Year  = Year { unYear :: Int }  deriving (Eq, Ord, Show)
+newtype Month = Month { unMonth :: Int } deriving (Eq, Ord,  Show)
+newtype Day   = Day { unDay :: Int } deriving (Eq, Ord, Show)
 
 data Time = Time { hour   :: Hour
                  , minute :: Minute
                  , second :: Second }
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
-newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord)
-newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord)
-newtype Second = Second { unSecond :: Int } deriving (Eq, Ord)
+newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord,Show)
+newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord,Show)
+newtype Second = Second { unSecond :: Int } deriving (Eq, Ord,Show)
 
 
 -- | The main interaction function. Used for IO, do not edit.
@@ -54,12 +54,13 @@ main = interact (printOutput . processCheck . processInput)
 parseDateTime :: Parser Char DateTime
 parseDateTime = undefined
 
-parseTime :: Parser Char Time
-parseTime x = Time <$> x
+dateTime = DateTime (Date (parseDate)) (Time (parseTime)) (Bool False)
+--parseTime :: Parser Char Time
+parseTime = Time (Hour 10) (Minute 10) (Second 10)
 
-parseDate :: Parser Char Date
-parseDate = 
-    
+--parseDate :: Parser Char Date
+parseDate = Date (Year 1990) (Month 12) (Day 10)
+
 numberGen :: [Int] -> Int
 numberGen x = foldl(\x y -> 10*x + y) 0 x
 
