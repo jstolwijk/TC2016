@@ -17,17 +17,17 @@ data Date = Date { year  :: Year
     deriving (Eq, Ord, Show)
 
 newtype Year  = Year { unYear :: Int }  deriving (Eq, Ord, Show)
-newtype Month = Month { unMonth :: Int } deriving (Eq, Ord,  Show)
-newtype Day   = Day { unDay :: Int } deriving (Eq, Ord, Show)
+newtype Month = Month { unMonth :: Int } deriving (Eq, Ord, Show)
+newtype Day   = Day { unDay :: Int } deriving (Eq, Ord,Show)
 
 data Time = Time { hour   :: Hour
                  , minute :: Minute
                  , second :: Second }
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
 
-newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord,Show)
-newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord,Show)
-newtype Second = Second { unSecond :: Int } deriving (Eq, Ord,Show)
+newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord)
+newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord)
+newtype Second = Second { unSecond :: Int } deriving (Eq, Ord)
 
 
 -- | The main interaction function. Used for IO, do not edit.
@@ -50,22 +50,34 @@ main = interact (printOutput . processCheck . processInput)
 
 
 
--- Exercise 1
-parseDateTime :: Parser Char DateTime
-parseDateTime = undefined
+-- Exercise 1 helper functions
+--pDate :: Parser Char Date
+pDate = Date <$> pYear <*> pMonth <*> pDay 
 
-dateTime = DateTime (Date (parseDate)) (Time (parseTime)) (Bool False)
---parseTime :: Parser Char Time
-parseTime = Time (Hour 10) (Minute 10) (Second 10)
+pYear = Year <$> parseInt 4
+pMonth = Month <$> parseInt 2
+pDay = Day <$> parseInt 2
 
---parseDate :: Parser Char Date
-parseDate = Date (Year 1990) (Month 12) (Day 10)
+--pTime :: Parser Char Time
+pTime = Time <$> pHour <*> pMinute <*> pSecond
+--pHour :: Parser Char Hour
+pHour = Hour <$> (parseInt 2)
+pMinute = Minute <$> parseInt 2
+pSecond = Second <$> parseInt 2
 
+--pUTC :: Parser Char Bool
+--pUTC = True
+
+--Int parse
 numberGen :: [Int] -> Int
 numberGen x = foldl(\x y -> 10*x + y) 0 x
 
-stringParse :: String -> Int
-stringParse x = numberGen $ map digitToInt x
+parseInt :: Int -> String -> Int
+parseInt n x = numberGen $ map digitToInt (take n x)
+
+--Exercise 1
+parseDateTime :: Parser Char DateTime
+parseDateTime = undefined -- DateTime <$> pDate <*> pTime <*> pUTC 
 
 -- Exercise 2
 run :: Parser a b -> [a] -> Maybe b
@@ -76,19 +88,33 @@ run = undefined
 printDateTime :: DateTime -> String
 printDateTime = undefined
 
+printDate :: Date -> String
+printDate = undefined
 
+printTime :: Time -> String
+printTime = undefined
+
+printUTC :: Bool -> String
+printUTC = undefined
 
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 
 
-
 -- Exercise 5
+dated = (Date (Year 1990) (Month 12) (Day 12))
+
 checkDateTime :: DateTime -> Bool
-checkDateTime = undefined
+checkDateTime (DateTime d t _) = checkDate d && checkTime t
 
+checkDate :: Date -> Bool
+checkDate (Date (Year y) (Month m) (Day d)) =   y < 2100 && y > 1900 && 
+                                                m < 13 && 
+                                                d < 32 
 
+checkTime :: Time -> Bool
+checkTime (Time (Hour h) (Minute m) (Second s)) = h < 24 && m < 60 && s < 60
 
 -- Exercise 6
 
