@@ -86,7 +86,7 @@ run = undefined
 
 -- Exercise 3
 printDateTime :: DateTime -> String
-printDateTime = undefined
+printDateTime dt = undefined
 
 printDate :: Date -> String
 printDate = undefined
@@ -106,7 +106,8 @@ parsePrint s = fmap printDateTime $ run parseDateTime s
 dated = (Date (Year 1990) (Month 12) (Day 12))
 
 checkDateTime :: DateTime -> Bool
-checkDateTime (DateTime d t _) = checkDate d && checkTime t
+checkDateTime dt =  checkDate (date dt) && 
+                    checkTime (time dt)
 
 checkDate :: Date -> Bool
 checkDate (Date (Year y) (Month m) (Day d)) =   y < 2100 && y > 1900 && 
@@ -114,7 +115,9 @@ checkDate (Date (Year y) (Month m) (Day d)) =   y < 2100 && y > 1900 &&
                                                 d < 32 
 
 checkTime :: Time -> Bool
-checkTime (Time (Hour h) (Minute m) (Second s)) = h < 24 && m < 60 && s < 60
+checkTime (Time (Hour h) (Minute m) (Second s)) =   h < 24 && 
+                                                    m < 60 && 
+                                                    s < 60
 
 -- Exercise 6
 
