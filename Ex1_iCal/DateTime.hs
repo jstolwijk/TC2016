@@ -1,7 +1,7 @@
+import Prelude hiding (sequence, (<*>), (<$>), (<$), parse)
 import ParseLib.Abstract
 import Data.Char as Char
-
-
+import Data.Maybe
 -- Starting Framework
 
 
@@ -23,11 +23,11 @@ newtype Day   = Day { unDay :: Int } deriving (Eq, Ord,Show)
 data Time = Time { hour   :: Hour
                  , minute :: Minute
                  , second :: Second }
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
-newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord)
-newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord)
-newtype Second = Second { unSecond :: Int } deriving (Eq, Ord)
+newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord, Show)
+newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord, Show)
+newtype Second = Second { unSecond :: Int } deriving (Eq, Ord, Show)
 
 
 -- | The main interaction function. Used for IO, do not edit.
@@ -48,71 +48,116 @@ main = interact (printOutput . processCheck . processInput)
         processCheck = map (maybe SyntaxError (\x -> if checkDateTime x then Valid x else Invalid x))
         printOutput  = unlines . map show
 
-
+main2 = printOutput . processCheck . processInput
+    where
+        processInput = map (run parseDateTime) . lines
+        processCheck = map (maybe SyntaxError (\x -> if checkDateTime x then Valid x else Invalid x))
+        printOutput  = unlines . map show
 
 -- Exercise 1 helper functions
---pDate :: Parser Char Date
-pDate = Date <$> pYear <*> pMonth <*> pDay 
 
-pYear = Year <$> parseInt 4
-pMonth = Month <$> parseInt 2
-pDay = Day <$> parseInt 2
+--parse date
+parseDate :: Parser Char Date
+parseDate = Date <$> parseYear <*> parseMonth <*> parseDay 
 
---pTime :: Parser Char Time
-pTime = Time <$> pHour <*> pMinute <*> pSecond
---pHour :: Parser Char Hour
-pHour = Hour <$> (parseInt 2)
-pMinute = Minute <$> parseInt 2
-pSecond = Second <$> parseInt 2
+parseYear :: Parser Char Year
+parseYear = Year <$> parseInt 4
 
---pUTC :: Parser Char Bool
---pUTC = True
+parseMonth :: Parser Char Month
+parseMonth = Month <$> parseInt 2
+
+parseDay :: Parser Char Day
+parseDay = Day <$> parseInt 2
+
+
+--Parse time
+parseTime :: Parser Char Time
+parseTime = Time <$> parseHour <*> parseMinute <*> parseSecond
+
+parseHour :: Parser Char Hour
+parseHour = Hour <$> parseInt 2
+
+parseMinute :: Parser Char Minute
+parseMinute = Minute <$> parseInt 2
+
+parseSecond :: Parser Char Second
+parseSecond = Second <$> parseInt 2
+
+parseTimeSeperator :: Parser Char Char  
+parseTimeSeperator = symbol 'T'
+
+parseUTC :: Parser Char Bool
+parseUTC = True <$ symbol 'Z' <|> False <$ epsilon
 
 --Int parse
+--cast list of int to number [1,2,3] -> 123
+--functie uit de refresh ex0
 numberGen :: [Int] -> Int
-numberGen x = foldl(\x y -> 10*x + y) 0 x
+numberGen = foldl(\x y -> 10*x + y) 0
 
-parseInt :: Int -> String -> Int
-parseInt n x = numberGen $ map digitToInt (take n x)
+
+--stringParse :: String -> Int
+--stringParse x = numberGen $ map digitToInt x
+
+
+parseInt :: Int -> Parser Char Int
+parseInt n = numberGen <$> sequence (replicate n newdigit)
 
 --Exercise 1
 parseDateTime :: Parser Char DateTime
-parseDateTime = undefined -- DateTime <$> pDate <*> pTime <*> pUTC 
+parseDateTime = DateTime <$> parseDate <* parseTimeSeperator <*> parseTime <*> parseUTC 
 
 -- Exercise 2
 run :: Parser a b -> [a] -> Maybe b
-run = undefined
-
+run parser x = listToMaybe (map fst (parse parser x))
+ 
 
 -- Exercise 3
 printDateTime :: DateTime -> String
-printDateTime dt = undefined
+printDateTime (DateTime d t u) = printDate d ++ printTime t ++ printUTC u
 
 printDate :: Date -> String
-printDate = undefined
+printDate d = show' (unYear (year d)) ++ show' (unMonth (month d)) ++ show' (unDay (day d))
 
 printTime :: Time -> String
-printTime = undefined
+printTime d = "T" ++ show' (unHour (hour d)) ++ show' (unMinute (minute d)) ++ show' (unSecond (second d))
 
 printUTC :: Bool -> String
-printUTC = undefined
+printUTC True = "Z"
+printUTC False = ""
 
+show' :: (Show a) => a -> String
+show' x = if ss == [] then "0" ++ [s] else sss
+    where sss@(s:ss) = show x
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 
 
 -- Exercise 5
-dated = (Date (Year 1990) (Month 12) (Day 12))
+dated = DateTime (Date (Year 1990) (Month 12) (Day 12)) (Time (Hour 10) (Minute 10) (Second 10)) True
 
 checkDateTime :: DateTime -> Bool
 checkDateTime dt =  checkDate (date dt) && 
                     checkTime (time dt)
 
 checkDate :: Date -> Bool
-checkDate (Date (Year y) (Month m) (Day d)) =   y < 2100 && y > 1900 && 
-                                                m < 13 && 
+checkDate (Date (Year y) (Month m) (Day d)) = if m == 2 && d == 29
+                                              then leapYear y
+                                              else
+                                                y > 0       && 
+                                                y < 9999    &&
+                                                m > 0       &&
+                                                m < 13      && 
+                                                d > 0        &&
                                                 d < 32 
+
+                                                
+leapYear :: Int -> Bool
+leapYear a = (check a 4) && (not (check a 100)) && (check a 400)
+
+check :: Int -> Int -> Bool
+check x y = (x `div` y) == 0
 
 checkTime :: Time -> Bool
 checkTime (Time (Hour h) (Minute m) (Second s)) =   h < 24 && 
