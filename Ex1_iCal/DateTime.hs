@@ -1,4 +1,5 @@
-import Prelude hiding (sequence, (<*>), (<$>), (<$), parse)
+--Jesse Stolwijk 4214676
+import Prelude hiding (sequence, (<*>), (<$>), (<$), parse, (<*))
 import ParseLib.Abstract
 import Data.Char as Char
 import Data.Maybe
@@ -14,24 +15,25 @@ data DateTime = DateTime { date :: Date
 data Date = Date { year  :: Year
                  , month :: Month
                  , day   :: Day }
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
 
-newtype Year  = Year { unYear :: Int }  deriving (Eq, Ord, Show)
-newtype Month = Month { unMonth :: Int } deriving (Eq, Ord, Show)
-newtype Day   = Day { unDay :: Int } deriving (Eq, Ord,Show)
+newtype Year  = Year { unYear :: Int }  deriving (Eq, Ord)
+newtype Month = Month { unMonth :: Int } deriving (Eq, Ord)
+newtype Day   = Day { unDay :: Int } deriving (Eq, Ord)
 
 data Time = Time { hour   :: Hour
                  , minute :: Minute
                  , second :: Second }
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
 
-newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord, Show)
-newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord, Show)
-newtype Second = Second { unSecond :: Int } deriving (Eq, Ord, Show)
+newtype Hour   = Hour { unHour :: Int } deriving (Eq, Ord)
+newtype Minute = Minute { unMinute :: Int } deriving (Eq, Ord)
+newtype Second = Second { unSecond :: Int } deriving (Eq, Ord)
 
 
 -- | The main interaction function. Used for IO, do not edit.
 data Result = SyntaxError | Invalid DateTime | Valid DateTime deriving (Eq, Ord)
+
 
 instance Show DateTime where
     show = printDateTime
@@ -48,11 +50,6 @@ main = interact (printOutput . processCheck . processInput)
         processCheck = map (maybe SyntaxError (\x -> if checkDateTime x then Valid x else Invalid x))
         printOutput  = unlines . map show
 
-main2 = printOutput . processCheck . processInput
-    where
-        processInput = map (run parseDateTime) . lines
-        processCheck = map (maybe SyntaxError (\x -> if checkDateTime x then Valid x else Invalid x))
-        printOutput  = unlines . map show
 
 -- Exercise 1 helper functions
 
@@ -104,65 +101,89 @@ parseInt :: Int -> Parser Char Int
 parseInt n = numberGen <$> sequence (replicate n newdigit)
 
 --Exercise 1
+--parse string to DateTime (Date) (Time) (Utc)
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* parseTimeSeperator <*> parseTime <*> parseUTC 
 
 -- Exercise 2
+--get first succesfull (just) element from results if fail return nothing
 run :: Parser a b -> [a] -> Maybe b
-run parser x = listToMaybe (map fst (parse parser x))
+run p x = listToMaybe $ map fst $ parse p x
  
-
 -- Exercise 3
+--print (date ++ "t" ++ time ++ utc)
 printDateTime :: DateTime -> String
-printDateTime (DateTime d t u) = printDate d ++ printTime t ++ printUTC u
-
-printDate :: Date -> String
-printDate d = show' (unYear (year d)) ++ show' (unMonth (month d)) ++ show' (unDay (day d))
-
-printTime :: Time -> String
-printTime d = "T" ++ show' (unHour (hour d)) ++ show' (unMinute (minute d)) ++ show' (unSecond (second d))
+printDateTime (DateTime (Date (Year y) (Month m) (Day d)) (Time (Hour h) (Minute mi) (Second s)) utc) 
+    = f [y,m,d] ++ "T" ++ f [h,mi,s] ++ printUTC utc
+        where f = concatMap showData
 
 printUTC :: Bool -> String
 printUTC True = "Z"
 printUTC False = ""
 
-show' :: (Show a) => a -> String
-show' x = if ss == [] then "0" ++ [s] else sss
-    where sss@(s:ss) = show x
+--add 0 if number is a single digit
+showData :: (Show a) => a -> String
+showData a = if null xs then "0" ++ [x] else o
+    where o@(x:xs) = show a
+
 -- Exercise 4
 parsePrint s = fmap printDateTime $ run parseDateTime s
 
 
 
 -- Exercise 5
-dated = DateTime (Date (Year 1990) (Month 12) (Day 12)) (Time (Hour 10) (Minute 10) (Second 10)) True
-
 checkDateTime :: DateTime -> Bool
 checkDateTime dt =  checkDate (date dt) && 
                     checkTime (time dt)
 
+--check all date rules
 checkDate :: Date -> Bool
-checkDate (Date (Year y) (Month m) (Day d)) = if m == 2 && d == 29
-                                              then leapYear y
-                                              else
-                                                y > 0       && 
-                                                y < 9999    &&
-                                                m > 0       &&
-                                                m < 13      && 
-                                                d > 0        &&
-                                                d < 32 
+checkDate (Date yo@(Year y) mo@(Month m) (Day d)) = all (==True) rules
+    where rules = [y>0, y<9999, m>0, m<13, d>0, d<=daysInMonth mo yo]
 
-                                                
-leapYear :: Int -> Bool
-leapYear a = (check a 4) && (not (check a 100)) && (check a 400)
+--returns days in month (needs year for leap year check)                                       
+daysInMonth :: Month -> Year -> Int
+daysInMonth (Month m) y = ds !! (m - 1)
+    where ds = [31,febDays y,31,30,31,30,31,31,30,31,30,31]
 
-check :: Int -> Int -> Bool
-check x y = (x `div` y) == 0
+febDays:: Year -> Int
+febDays y 
+    | leapYear y = 29
+    | otherwise = 28
 
+leapYear :: Year -> Bool
+leapYear (Year y)
+    | modBool y 400 = True
+    | modBool y 100 = False
+    | modBool y 4 = True
+    | otherwise = False
+
+modBool :: Int -> Int -> Bool
+modBool x y = mod x y == 0
+
+--check time rules
 checkTime :: Time -> Bool
 checkTime (Time (Hour h) (Minute m) (Second s)) =   h < 24 && 
                                                     m < 60 && 
                                                     s < 60
 
 -- Exercise 6
+--save optional values as maybe (set nothing if no data)
 
+{-
+data event = Event {
+                    uid :: String,
+                    dtstamp :: DateTime,
+                    dstart :: DateTime,
+                    dend   :: DateTime,
+                    decription :: Maybe String,
+                    summary :: Maybe String,
+                    location :: Maybe String
+                    }    deriving (Eq, Ord)
+
+
+data Calendar = Calendar {  propid :: String,
+                            version :: String,
+                            events :: [Event]
+                          }    deriving (Eq, Ord)
+-}
