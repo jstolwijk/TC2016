@@ -58,113 +58,108 @@ main = do
 
 
 -- Exercise 1
-data Token = Tstartcal 
+data Token =Tstartcal 
+            |Tprodid String
             | Tendcal
             | Tstartevent
             | Tendevent
-            | Tdtstamp DateTime
-            | Tdtstart DateTime
-            | Tdtend DateTime
+            | Tdtstamp String
+            | Tdtstart String
+            | Tdtend String
             | Tuid String
+            | Tlocation String
+            | Tdescription String
             | Tsummary String
     deriving (Eq, Ord)
-spaces :: Parser Char String
-spaces = greedy (satisfy isSpace)
-
-tstartcal :: Parser Char Token
-tstartcal = Tstartcal <$ token "BEGIN:VCALENDAR"
-
-tendcal :: Parser Char Token
-tendcal = Tendcal <$ token "END:VCALENDAR"
-
-tstartevent :: Parser Char Token
-tstartevent = Tstartevent <$ token "BEGIN:VEVENT"
-
-tendevent :: Parser Char Token
-tendevent = Tendevent <$ token "END:VEVENT"
-
-tstuid :: Parser Char Token
-tstuid = undefined --Tuid <$ token "UID:" -- <*> token
-
-tdtstamp :: Parser Char Token
-tdtstamp = Tdtstamp <$ token "DTSTAMP:" <*> parseDateTime
-
-tdtstart :: Parser Char Token
-tdtstart = Tdtstart <$ token "DTSTART:" <*> parseDateTime
-
-tdtend :: Parser Char Token
-tdtend = Tdtend <$ token "DTEND:" <*> parseDateTime
-
-anyToken :: Parser Char Token
-anyToken = tstartcal <|> tstartevent <|> tdtstamp <|> tdtstart <|> tdtend <|> tendevent <|> tendcal
-
-scanCalendar :: Parser Char [Token]
-scanCalendar = spaces *> greedy anyToken <* eof
 
 --parse date
 parseDate :: Parser Char Date
-parseDate = Date <$> (Year <$> parseInt 4) <*> (Month <$> parseInt 2) <*> (Day <$> parseInt 2) 
-
+parseDate = Date <$> (Year <$> pInt 4) <*> (Month <$> pInt 2) <*> (Day <$> pInt 2) 
 
 --Parse time
 parseTime :: Parser Char Time
-parseTime = Time <$> parseHour <*> parseMinute <*> parseSecond
-
-parseHour :: Parser Char Hour
-parseHour = Hour <$> parseInt 2
-
-parseMinute :: Parser Char Minute
-parseMinute = Minute <$> parseInt 2
-
-parseSecond :: Parser Char Second
-parseSecond = Second <$> parseInt 2
-
-parseTimeSeperator :: Parser Char Char  
-parseTimeSeperator = symbol 'T'
+parseTime = Time <$> (Hour <$> pInt 2) <*> (Minute <$> pInt 2) <*> (Second <$> pInt 2)
 
 --parse utc
 parseUTC :: Parser Char Bool
 parseUTC = True <$ symbol 'Z' <|> False <$ epsilon
 
+parseDateTime :: Parser Char DateTime
+parseDateTime = DateTime <$> parseDate <* (symbol 'T') <*> parseTime <*> parseUTC 
+
+spaces :: Parser Char String
+spaces = greedy (satisfy isSpace)
+
+readStringTillEnd :: Parser Char String
+readStringTillEnd = many (satisfy (\x -> x /= '\n'))
+
+anyToken :: Parser Char Token
+anyToken = Tstartcal <$ token "BEGIN:VCALENDAR" <|> 
+           Tstartevent <$ token "BEGIN:VEVENT" <|> 
+           Tdtstamp <$ token "DTSTAMP:" <*> readStringTillEnd <|> 
+           Tdtstart <$ token "DTSTART:" <*> readStringTillEnd <|> 
+           Tdtend <$ token "DTEND:" <*> readStringTillEnd <|> 
+           Tuid <$ token "UID:" <*> readStringTillEnd <|>
+           Tsummary <$ token "SUMMARY:" <*> readStringTillEnd <|>
+           Tlocation <$ token "LOCATION:" <*> readStringTillEnd <|>
+           Tdescription <$ token "DESCRIPTION:" <*> readStringTillEnd <|>
+           Tendevent <$ token "END:VEVENT" <|> 
+           Tendcal <$ token "END:VCALENDAR"
+
+scanCalendar :: Parser Char [Token]
+scanCalendar = spaces *> greedy anyToken <* eof
+
+ --Parse token functions
 numberGen :: [Int] -> Int
 numberGen = foldl(\x y -> 10*x + y) 0
 
-parseInt :: Int -> Parser Char Int
-parseInt n = numberGen <$> sequence (replicate n newdigit)
+pInt :: Int -> Parser Char Int
+pInt n = numberGen <$> sequence (replicate n newdigit)
 
+pStartVEvent :: Parser Token Token
+pStartVEvent = undefined
 
-parseDateTime :: Parser Char DateTime
-parseDateTime = DateTime <$> parseDate <* parseTimeSeperator <*> parseTime <*> parseUTC 
+pEndEvent :: Parser Token Token
+pEndEvent = undefined
 
-parseUid :: Parser Char String
-parseUid = undefined
+pTprodid :: Parser Token String
+pTprodid = undefined
 
-{-
-datetime :: Token -> DateTime
-datetime t = fromDateTime <$> (satisfy isDateTime t)
+pTdtstamp :: Parser Token DateTime
+pTdtstamp = undefined
 
-isDateTime :: Token -> Bool
-isDateTime (DateTime x) = True
-isDateTime _= False
+pTuid :: Parser Token String
+pTuid = undefined
 
-fromDateTime :: Token -> DateTime
-fromDateTime (DateTime x) = x
-fromDateTime _ = error "fromDateTime"-}
-{-
-checkString :: Token -> String
-checkString = fromString <$> satisfy IsString
+pTdtstart :: Parser Token DateTime
+pTdtstart = undefined
 
-isString :: Token -> Bool
-isString t :: [Char] = True
-isString _ = False
-fromString :: Token -> String
-fromString t :: [Char] = t
-fromString _ = error "fromDateTime"-}
+pTdtend :: Parser Token DateTime
+pTdtend = undefined
+
+pTdescription :: Parser Token String
+pTdescription = undefined
+
+pTsummary :: Parser Token String
+pTsummary = undefined
+
+pTlocation :: Parser Token String
+pTlocation = undefined
+
 parseCalendar :: Parser Token Calendar
-parseCalendar = undefined--Calendar <$> datetime <*> checkString <*> datetime <*> datetime <*> checkString <*> checkString <*> checkString
+parseCalendar = Calendar <$> pTprodid <*> many pVEvent
 
-parseVEvent :: Parser Token VEvent
-parseVEvent = undefined--VEvent <$> 
+pVEvent :: Parser Token VEvent
+pVEvent = VEvent <$
+                pStartVEvent <*>
+                pTdtstamp <*> 
+                pTuid <*> 
+                pTdtstart <*> 
+                pTdtend <*>
+                optional pTdescription <*> 
+                optional pTsummary <*>
+                optional pTlocation <*
+                pEndEvent
 
 
 -- Exercise 2
@@ -218,7 +213,7 @@ showData a = if null xs then "0" ++ [x] else o
 
 -- Exercise 4
 countEvents :: Calendar -> Int
-countEvents (Calendar pid xs) = length xs
+countEvents = length . events
 
 findEvents :: DateTime -> Calendar -> [VEvent]
 findEvents dt (Calendar _ xs) = foldr (checkEvent dt) [] xs

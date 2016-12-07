@@ -1,0 +1,12 @@
+
+data Token = Tstartcal 
+            | Tendcal
+            | Tstartevent
+            | Tendevent
+            | Tdtstamp String
+            | Tdtstart String
+            | Tdtend String
+            | Tuid String
+            | Tlocation String
+            | Tdescription String
+            | Tsummary String
