@@ -1,3 +1,39 @@
+{-
+=== Exercise 1
++++ OK, passed 100 tests.
++++ OK, passed 100 tests.
++++ OK, passed 1 tests.
++++ OK, passed 100 tests.
+=== Exercise 4
++++ OK, passed 100 tests.
++++ OK, passed 100 tests.
+*** Failed! Falsifiable (after 3 tests): 
+Right BEGIN:VCALENDAR
+PRODID:y
+VERSION:2.0
+BEGIN:VEVENT
+DTSTAMP:12511018T092755Z
+UID:L
+DTSTART:20620101T021807Z
+DTEND:33870212T225010Z
+DESCRIPTION:D
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:15660820T084717Z
+UID:uq
+DTSTART:24150610T193826Z
+DTEND:95730125T234834Z
+DESCRIPTION:g
+ ae
+END:VEVENT
+END:VCALENDAR
+
+de bonus opdracht is multiline en bij opgave 4 wordt het gewoon fout gerekend terwijl multiline bonus is :(
+
+Jesse Stolwijk 4214676
+-}
+
+
 module ICalendar where
 import Prelude hiding (sequence, (<*>), (<$>), (<$), parse, (<*), (*>))
 import Text.PrettyPrint
@@ -61,8 +97,7 @@ main = do
     res <- readCalendar "examples/bastille.ics"
     putStrLn . render $ maybe (text "Calendar parsing error") (ppMonth (Year 2012) (Month 11)) res
 
-
-
+aaaa = fromJust $ recognizeCalendar "BEGIN:VCALENDAR\r\nPRODID:w\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:64351217T223104Z\r\nUID:z\r\nDTSTART:46320421T170257Z\r\nDTEND:66390220T153130Z\r\nEND:VEVENT\r\nEND:VCALENDAR"
 -- Exercise 1
 data Token =Tstartcal 
             | Tprodid String
@@ -94,9 +129,6 @@ parseUTC = True <$ symbol 'Z' <|> False <$ epsilon
 parseDateTime :: Parser Char DateTime
 parseDateTime = DateTime <$> parseDate <* symbol 'T' <*> parseTime <*> parseUTC
 
-readStringTillEnd :: Parser Char String
-readStringTillEnd = many $ satisfy (\x -> x /= '\n' && x /= '\r')
-
 --Deze variabelen worden bij het lexen en het printen gebruikt
 printBeginCal = "BEGIN:VCALENDAR"
 printVersion = "VERSION:2.0"
@@ -113,6 +145,8 @@ printEndEvent = "END:VEVENT"
 printEndCal = "END:VCALENDAR"
 printCrlf = "\r\n" 
 
+
+--scanner
 anyToken :: Parser Char Token
 anyToken = Tstartcal    <$ token printBeginCal                              <* newLine <|>
            Tempty       <$ token printVersion                               <* newLine <|>
@@ -133,12 +167,17 @@ anyToken = Tstartcal    <$ token printBeginCal                              <* n
 scanCalendar :: Parser Char [Token]
 scanCalendar = greedy anyToken <* eof
 
- --Parse token functions
+
 numberGen :: [Int] -> Int
 numberGen = foldl(\x y -> 10*x + y) 0
 
+--parse n ints
 pInt :: Int -> Parser Char Int
 pInt n = numberGen <$> sequence (replicate n newdigit)
+
+--read string till line end \r\n
+readStringTillEnd :: Parser Char String
+readStringTillEnd = many $ satisfy (\x -> x /= '\n' && x /= '\r')
 
 {-
 --vb van slides
@@ -152,8 +191,8 @@ fromStation (TStation x) = x
 fromStation = error "fromStation"
 
 -}
---checkType :: (String -> Token) -> Token -> Bool ??
 
+--token parsers
 pTprodid :: Parser Token String
 pTprodid = (\(Tprodid x) -> x) <$> satisfy checkType
     where checkType (Tprodid _) = True
@@ -199,7 +238,6 @@ pTuid = satisfy checkType
     where checkType (Tuid _) = True
           checkType _ = False
 
-
 pTdescription :: Parser Token Token
 pTdescription = satisfy checkType
     where checkType (Tdescription _) = True
@@ -219,6 +257,7 @@ pTempty :: Parser Token Token
 pTempty = satisfy checkType
     where checkType (Tempty) = True
           checkType _ = False
+
 {-
 pVEvent :: Parser Token VEvent
 pVEvent = VEvent <$
@@ -230,9 +269,8 @@ pVEvent = VEvent <$
                 optional pTdescription <*> 
                 optional pTsummary <*>
                 optional pTlocation <*
-                pEndVEvent-}
-
-
+                pEndVEvent
+            -}
 
 pVEvents :: Parser Token [VEvent]
 pVEvents = catMaybes <$> many pVEvent
@@ -263,35 +301,12 @@ pVEvent = pvevent <$ pStartVEvent <*> many makeEventChoice <* pEndVEvent
                     location    <- Just $ useProp [x | (Tlocation x) <- prop]
                     return (VEvent dtstamp uid dtstart dtend description summary location)
 
-{-
-pVEvent :: Parser Token VEvent
-pVEvent = VEvent <$> dtstamp <*> uid <*> dtstart <*> dtend <*> description <*> summary <*> location <* pStartVEvent <*> many makeEventChoice <* pEndVEvent
-            where
-                useProp [x] = Just x
-                useProp [] = Nothing
-                    
-                dtstamp prop = head [x | (Tdtstamp x) <- prop]
-                uid prop = head [x | (Tuid x) <- prop]
-                dtstart prop = head [x | (Tdtstart x) <- prop]
-                dtend prop = useProp [x | (Tdtend x) <- prop]
-                description prop = Just [x | (Tdescription x) <- prop]
-                summary prop = Just [x | (Tsummary x) <- prop]
-                location prop = Just [x | (Tlocation x) <- prop]
--}
-pc :: Parser Token String
-pc = pTprodid <* pTempty <|> pTempty *> pTprodid
-{-
-pCalendar :: Parser Token (Maybe String)
-pCalendar = pcalendar <$> (many (choice[pTprodid,pTempty]))       
-        where
-            useProp x = Just $ head x 
-            pcalendar props = do
-                    prodid  <- useProp [p | (Tprodid p) <- props]
-                    empty <-   useProp [p | p@(Tempty) <- props]
-                    return (prodid)
--}
+
+parseHeader :: Parser Token String
+parseHeader = pTprodid <* pTempty <|> pTempty *> pTprodid
+
 parseCalendar :: Parser Token Calendar
-parseCalendar = Calendar <$ pStartCalendar <*> pc <*> pVEvents <* pEndCalendar  
+parseCalendar = Calendar <$ pStartCalendar <*> parseHeader <*> pVEvents <* pEndCalendar  
 
 -- Exercise 2
 readCalendar :: FilePath -> IO (Maybe Calendar)
@@ -335,7 +350,7 @@ printUTC :: Bool -> String
 printUTC True = "Z"
 printUTC False = ""
 
---add 0 if number is a single digit
+--pretty print datetime's ints (Hour 1 -> "01")
 showData :: (Show a) => a -> String
 showData a = if null xs then "0" ++ [x] else o
     where o@(x:xs) = show a
@@ -366,17 +381,23 @@ maybeToString :: (Maybe String) -> String
 maybeToString (Just x) = x
 maybeToString Nothing = ""
 
+--find events by summary
 findSummary :: String -> Calendar -> [VEvent]
 findSummary s (Calendar _ xs) = foldr (\c rs -> if (maybeToString (summary c)) == s then c:rs else rs) [] xs
 
+--event duration time
 eventTime :: VEvent -> Int
 eventTime e = (((daysTillYearEnds bd) + sum (map daysInYear years) - (daysTillYearEnds ed)) * 24 + h) * 60 + m + (div s 60)
-    where bd = date $ dtStart e
+    where --startdate / enddate
+          bd = date $ dtStart e
           ed = date $ dtEnd e
+          --starttime / endtime
           bt = time $ dtStart e
           et = time $ dtEnd e
+          --startyear / endyear
           by = unYear (year bd)
           ey = unYear (year ed)
+          --year delta / min delta / sec delta
           h = unHour (hour bt) - unHour (hour et)
           m = unMinute (minute bt) - unMinute (minute et)
           s = unSecond (second bt) - unSecond (second et)
@@ -388,37 +409,38 @@ daysTillYearEnds (Date y m (Day d)) = sum (map (flip daysInMonth' y) (xs (unMont
           xs x = [x..12]
 
 
+-- Exercise 5
+
+--ppCal datatypes
 data EventWeek = EventWeek { eventdays :: [EventDay]}
 
 data EventDay = EventDay {  unDate :: Date,
                             unEvents :: [VEvent] }
 
--- Exercise 5
+
+
+--alle benodigde functies voor het printen zijn gedefineerd, de laatste stap ontbreekt echter
 ppMonth :: Year -> Month -> Calendar -> Doc
 ppMonth y m c = undefined--text (concatMap printEventWeek (createCalendar c (Date y m (Day 1))))
-{-
-printEventWeek = concatMap ppEventDay [(EventDay (Date (Year 1) (Month 12) (Day 1))), 
-                                            (EventDay (Date (Year 1) (Month 12) (Day 2))),
-                                    (EventDay (Date (Year 1) (Month 12) (Day 3))),
-                                    (EventDay (Date (Year 1) (Month 12) (Day 4))),
-                                    (EventDay (Date (Year 1) (Month 12) (Day 5))),
-                                    (EventDay (Date (Year 1) (Month 12) (Day 6))),
-                                    (EventDay (Date (Year 1) (Month 12) (Day 7)))    
-                                    ]
--}
 
-ppVEvent :: VEvent -> String
-ppVEvent e = ppTime start ++ " - " ++ ppTime end
+
+--ppVEvent start - end time
+ppVEventTime :: VEvent -> String
+ppVEventTime e = ppTime start ++ " - " ++ ppTime end
     where ppTime dt = showData (unHour (hour dt)) ++ ":" ++ showData (unMinute (minute dt))
           start = time $ dtStart e
           end = time $ dtEnd e
-   {-
-ppEventDay (EventDay d) = if mod cday 7 == 1 then printEDay else "| " ++ printEDay
+
+ppEventDayContent :: Maybe VEvent -> String
+ppEventDayContent Nothing = replicate 12 ' ' ++ "|"
+ppEventDayContent (Just e) = ppVEventTime e ++ " |"
+
+ppEventDayHeader :: EventDay -> String
+ppEventDayHeader (EventDay d xs) = show cday ++ replicate 12 ' ' ++ "|"
     where cday = (unDay (day d))
-          printEDay = show cday ++ replicate 13 ' '
--}
+
 ppDottedLine :: String
-ppDottedLine = line 14 ++ concat (replicate 5 ("+" ++ line 15)) ++ line 15
+ppDottedLine = line 13 ++ concat (replicate 6 ("+" ++ line 13)) ++ "+"
     where line n = (replicate n '-')
 
 createCalendar :: Calendar -> Date -> [EventWeek]
