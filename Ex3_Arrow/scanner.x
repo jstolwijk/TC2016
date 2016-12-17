@@ -1,12 +1,12 @@
 {
-module Main (main) where
+module Scanner where
 }
 
 %wrapper "basic"
 
 $digit = 0-9        -- digits
 $alpha = [a-zA-Z]   -- alphabetic characters
-$plusmin    = [\+\-]     -- +-
+$plusmin = [\+\-]     -- +-
 
 tokens :-
 $white+ ;

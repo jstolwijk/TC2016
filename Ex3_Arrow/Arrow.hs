@@ -1,12 +1,15 @@
 module Arrow where
 
 import Prelude hiding ((<*), (<$))
+
 import ParseLib.Abstract
+import Scanner
+import Parser
+
 import Data.Map (Map)
 import qualified Data.Map as L
 import Control.Monad (replicateM)
 import Data.Char (isSpace)
-
 
 type Space     =  Map Pos Contents
 type Size      =  Int
@@ -49,4 +52,3 @@ data ArrowState  =  ArrowState Space Pos Heading Stack
 data Step  =  Done  Space Pos Heading
            |  Ok    ArrowState
            |  Fail  String
-
