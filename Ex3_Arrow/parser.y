@@ -75,11 +75,31 @@ type PIdent = String
 type Program = [Rule]
 type Rule = (PIdent, Cmds)
 type Cmds = [Cmd]
-data Cmd = PGo | PTake | PMark | PNothing | PTurn Dir | PCase Dir Alts | PIdent String deriving (Show)
-data Dir = PLeft | PRight | PFront deriving (Show)
+
+data Cmd = 	PGo | 
+			PTake | 
+			PMark | 
+			PNothing | 
+			PTurn Dir | 
+			PCase Dir Alts | 
+			PIdent String 
+			deriving (Show)
+
+data Dir = 	PLeft | 
+			PRight | 
+			PFront 
+			deriving (Show)
+
 type Alts = [Alt]
 type Alt = (Pat, Cmds)
-data Pat = PEmpty | PLambda | PDebris | PAsteroid | PBoundary | PUnderscore deriving (Show)
+
+data Pat = 	PEmpty | 
+			PLambda | 
+			PDebris | 
+			PAsteroid | 
+			PBoundary | 
+			PUnderscore 
+			deriving (Show)
 
 parseError :: [Token] -> a
 parseError _ = error "parser error"
