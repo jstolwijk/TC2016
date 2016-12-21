@@ -44,61 +44,61 @@ Cmds : {- empty -}            { [] }
      | Cmd                    { [$1] }
      | Cmds ',' Cmd           { $3 : $1 }
 
-Cmd : go                      { PGo }
-    | take                    { PTake }
-    | mark                    { PMark }
-    | nothing                 { PNothing }
-    | turn Dir                { PTurn $2 }
-    | case Dir of Alts end    { PCase $2 $4 }
-    | ident                   { PIdent $1 }
+Cmd : go                      { Go }
+    | take                    { Take }
+    | mark                    { Mark }
+    | nothing                 { Parser.Nothing }
+    | turn Dir                { Turn $2 }
+    | case Dir of Alts end    { Case $2 $4 }
+    | ident                   { Ident $1 }
 
-Dir : left                    { PLeft }
-    | right                   { PRight }
-    | front                   { PFront }
+Dir : left                    { Parser.Left }
+    | right                   { Parser.Right }
+    | front                   { Front }
 
 Alts : {- empty -}            { [] }
      | Alt                    { [$1] }
      | Alts ';' Alt           { $3 : $1 }
 
-Alt : Pat "->" Cmds           { ($1, $3) }
+Alt : Contents "->" Cmds           { ($1, $3) }
 
-Pat : empty                   { PEmpty }
-    | lambda                  { PLambda }
-    | debris                  { PDebris }
-    | asteroid                { PAsteroid }
-    | boundary                { PBoundary }
-    | '_'                     { PUnderscore }
+Contents : empty                   { Empty }
+    | lambda                  { Lambda }
+    | debris                  { Debris }
+    | asteroid                { Asteroid }
+    | boundary                { Boundary }
+    | '_'                     { Underscore }
 
 {
-type PIdent = String
+type Ident = String
 
 type Program = [Rule]
-type Rule = (PIdent, Cmds)
+type Rule = (Ident, Cmds)
 type Cmds = [Cmd]
 
-data Cmd = 	PGo | 
-			PTake | 
-			PMark | 
-			PNothing | 
-			PTurn Dir | 
-			PCase Dir Alts | 
-			PIdent String 
+data Cmd = 	      Go | 
+			Take | 
+			Mark | 
+			Nothing | 
+			Turn Dir | 
+			Case Dir Alts | 
+			Ident String 
 			deriving (Show)
 
-data Dir = 	PLeft | 
-			PRight | 
-			PFront 
+data Dir = 	      Left | 
+			Right | 
+			Front 
 			deriving (Show)
 
 type Alts = [Alt]
-type Alt = (Pat, Cmds)
+type Alt = (Contents, Cmds)
 
-data Pat = 	PEmpty | 
-			PLambda | 
-			PDebris | 
-			PAsteroid | 
-			PBoundary | 
-			PUnderscore 
+data Contents =   Empty | 
+			Lambda | 
+			Debris | 
+			Asteroid | 
+			Boundary | 
+			Underscore 
 			deriving (Show)
 
 parseError :: [Token] -> a

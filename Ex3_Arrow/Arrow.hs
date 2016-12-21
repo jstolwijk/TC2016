@@ -14,7 +14,7 @@ import Data.Char (isSpace)
 type Space     =  Map Pos Contents
 type Size      =  Int
 type Pos       =  (Int, Int)
-data Contents  =  Empty | Lambda | Debris | Asteroid | Boundary
+--data Contents  =  Empty | Lambda | Debris | Asteroid | Boundary
 
 parseSpace :: Parser Char Space
 parseSpace =
@@ -40,7 +40,7 @@ contentsTable =
   [  (Empty,'.'),(Lambda,'\\'),(Debris,'%'),(Asteroid,'O'),(Boundary,'#')]
 
 -- These three should be defined by you
-type Ident = ()
+--type Ident = ()
 type Commands = ()
 type Heading = ()
 
@@ -52,3 +52,15 @@ data ArrowState  =  ArrowState Space Pos Heading Stack
 data Step  =  Done  Space Pos Heading
            |  Ok    ArrowState
            |  Fail  String
+
+type ArrowAlgebra p = ( [rs] -> p, 
+                        String -> [cs] -> r,  
+                        cmd,
+                        cmd,
+                        cmd,
+                        cmd,
+                        Dir -> cmd,
+                        Dir -> [alt].
+                        String -> cmd,
+                        Contents -> [cmd] -> alt
+                    )
