@@ -8,41 +8,41 @@ import Scanner
 %error { parseError }
 
 %token
-      "->"         { TArrow }
-      '.'          { TDot }
-      ','          { TComma }
-      go           { TGo }
-      take         { TTake }
-      mark         { TMark }
-      nothing      { TNothing }
-      turn         { TTurn }
-      case         { TCase }
-      of           { TOf }
-      end          { TEnd }
-      left         { TLeft }
-      right        { TRight }
-      front        { TFront }
-      ';'          { TSemicolon }
-      empty        { TEmpty }
-      lambda       { TLambda }
-      debris       { TDebris }
-      asteroid     { TAsteroid }
-      boundary     { TBoundary }
-      '_'          { TUnderscore }
-      ident        { TIdent $$ }
+      "->"         { Scanner.TArrow }
+      '.'          { Scanner.TDot }
+      ','          { Scanner.TComma }
+      go           { Scanner.TGo }
+      take         { Scanner.TTake }
+      mark         { Scanner.TMark }
+      nothing      { Scanner.TNothing }
+      turn         { Scanner.TTurn }
+      case         { Scanner.TCase }
+      of           { Scanner.TOf }
+      end          { Scanner.TEnd }
+      left         { Scanner.TLeft }
+      right        { Scanner.TRight }
+      front        { Scanner.TFront }
+      ';'          { Scanner.TSemicolon }
+      empty        { Scanner.TEmpty }
+      lambda       { Scanner.TLambda }
+      debris       { Scanner.TDebris }
+      asteroid     { Scanner.TAsteroid }
+      boundary     { Scanner.TBoundary }
+      '_'          { Scanner.TUnderscore }
+      ident        { Scanner.TIdent $$ }
 
 %%
-Program : Rules 			  { $1 }
+Program : Rules 			  { Program $1 }
+
+Rule : ident "->" Cmds '.'       { Rule $1 $3 }
 
 Rules : {- empty -}			  { [] }
 	  | Rule                  { [$1] }
       | Rules Rule            { $2 : $1 }
 
-Rule : ident "->" Cmds '.'       { ($1, $3) }
-
-Cmds : {- empty -}            { [] }
-     | Cmd                    { [$1] }
-     | Cmds ',' Cmd           { $3 : $1 }
+Cmds : {- empty -}			  { [] }
+	 | Cmd                   { [$1] }
+     | Cmds ',' Cmd          { $3 : $1 }
 
 Cmd : go                      { Go }
     | take                    { Take }
@@ -60,9 +60,9 @@ Alts : {- empty -}            { [] }
      | Alt                    { [$1] }
      | Alts ';' Alt           { $3 : $1 }
 
-Alt : Contents "->" Cmds           { ($1, $3) }
+Alt : Contents "->" Cmds      { Alt $1 $3 }
 
-Contents : empty                   { Empty }
+Contents : empty              { Empty }
     | lambda                  { Lambda }
     | debris                  { Debris }
     | asteroid                { Asteroid }
@@ -72,26 +72,25 @@ Contents : empty                   { Empty }
 {
 type Ident = String
 
-type Program = [Rule]
-type Rule = (Ident, Cmds)
-type Cmds = [Cmd]
+data Program = Program [Rule]			deriving (Show, Eq)
+data Rule = Rule Ident [Cmd]			deriving (Show, Eq)
 
-data Cmd = 	      Go | 
+data Cmd = 	Go | 
 			Take | 
 			Mark | 
 			Nothing | 
 			Turn Dir | 
-			Case Dir Alts | 
+			Case Dir [Alt] | 
 			Ident String 
-			deriving (Show)
+			deriving (Show, Eq)
 
-data Dir = 	      Left | 
+data Dir = 	Left | 
 			Right | 
 			Front 
-			deriving (Show)
+			deriving (Show, Eq)
 
-type Alts = [Alt]
-type Alt = (Contents, Cmds)
+data Alt = Alt Contents [Cmd]
+			deriving (Show, Eq)
 
 data Contents =   Empty | 
 			Lambda | 
@@ -99,7 +98,8 @@ data Contents =   Empty |
 			Asteroid | 
 			Boundary | 
 			Underscore 
-			deriving (Show)
+           	deriving (Eq, Show)
+ 
 
 parseError :: [Token] -> a
 parseError _ = error "parser error"
