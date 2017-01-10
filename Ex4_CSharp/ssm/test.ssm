@@ -1,0 +1,15 @@
+    LDC 7
+    LDC 12
+    BSR m
+
+m:  LDR MP
+    LDRR MP SP
+    AJS +2
+    LDL -3
+    NEG
+    STL +1
+    LDRR SP MPS
+    STR MP
+    STS -2
+    AJS -1
+    RET
