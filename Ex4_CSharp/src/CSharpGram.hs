@@ -24,6 +24,7 @@ data Stat = StatDecl   Decl
 data Expr = ExprConst  Token
           | ExprVar    Token
           | ExprOper   Token Expr Expr
+          | ExprMethod Token [Expr]
           deriving Show
 
 data Decl = Decl Type Token
@@ -41,8 +42,9 @@ bracketed     p = pack (symbol SOpen) p (symbol SClose)
 braced        p = pack (symbol COpen) p (symbol CClose)
 
 pExprSimple :: Parser Token Expr
-pExprSimple =  ExprConst <$> sConst
-           <|> ExprVar   <$> sLowerId
+pExprSimple =  ExprConst  <$> sConst
+           <|> ExprVar    <$> sLowerId
+           <|> ExprMethod <$> sLowerId <*> pExprMethod
            <|> parenthesised pExpr
 
 pExpr :: Parser Token Expr
@@ -51,7 +53,7 @@ pExpr = fixCombined <$> foldr f pExprSimple opPriority
 
 --handle combined operators (+=, -=, etc.)
 fixCombined :: Expr -> Expr
-fixCombined (ExprOper (Operator (s:"=")) x y) = ExprOper (Operator "=") x (ExprOper (Operator s) _ y)
+fixCombined (ExprOper (Operator (s:"=")) x y) = ExprOper (Operator "=") x (ExprOper (Operator [s]) x y)
 fixCombined e = e
 
 --operator priorities
@@ -62,10 +64,14 @@ opPriority = [
         [Operator "&&"],
         [Operator "^"],
         [Operator "==", Operator "!="],
-        [Operator "<", Operator ">", Operator "<=", Operator ">="],
+        [Operator ">=", Operator "<=", Operator ">", Operator "<"],
         [Operator "+", Operator "-"],
         [Operator "*", Operator "/", Operator "%"]
     ]
+
+pExprMethod :: Parser Token [Expr]
+pExprMethod = parenthesised (option (listOf pExpr sep) [])
+    where sep = symbol Comma
 
 pMember :: Parser Token Member
 pMember =  MemberD <$> pDeclSemi

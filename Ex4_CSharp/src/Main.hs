@@ -45,5 +45,5 @@ processFile (infile, outfile) =
 
 testLex infile =   do
               xs <- readFile infile
-              putStrLn (show (process xs))
+              putStrLn $ show (process xs)
   where process = start lexicalScanner
