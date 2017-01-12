@@ -46,19 +46,25 @@ pExprSimple =  ExprConst <$> sConst
            <|> parenthesised pExpr
 
 pExpr :: Parser Token Expr
-pExpr = fx <$> foldr f pExprSimple opPriority
-    where f = (\ts p -> chainl p (choice (map (\x -> ExprOper <$> symbol x) ts)))
+pExpr = fixCombined <$> foldr f pExprSimple opPriority
+    where f ts p = chainl p (choice (map (\x -> ExprOper <$> symbol x) ts))
 
-opPriority :: [[String]]
+--handle combined operators (+=, -=, etc.)
+fixCombined :: Expr -> Expr
+fixCombined (ExprOper (Operator (s:"=")) x y) = ExprOper (Operator "=") x (ExprOper (Operator s) _ y)
+fixCombined e = e
+
+--operator priorities
+opPriority :: [[Token]]
 opPriority = [
-        ["="],
-        ["||"],
-        ["&&"],
-        ["^"],
-        ["==", "!="],
-        ["<", ">", "<=", ">="],
-        ["+", "-"],
-        ["*", "/", "%"]
+        [Operator "="],
+        [Operator "||"],
+        [Operator "&&"],
+        [Operator "^"],
+        [Operator "==", Operator "!="],
+        [Operator "<", Operator ">", Operator "<=", Operator ">="],
+        [Operator "+", Operator "-"],
+        [Operator "*", Operator "/", Operator "%"]
     ]
 
 pMember :: Parser Token Member
