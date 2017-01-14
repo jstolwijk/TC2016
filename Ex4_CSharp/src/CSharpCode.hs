@@ -69,8 +69,9 @@ fExprOp (Operator "=") e1 e2 va = e2 Value ++ [LDS 0] ++ e1 Address ++ [STA 0]
 fExprOp (Operator op)  e1 e2 va = e1 Value ++ e2 Value ++ [opCodes ! op]
 
 fExprMethod :: Token -> (ValueOrAddress -> Code) -> ValueOrAddress -> Code
+fExprMethod (Operator "print") = undefined--fExprOp ++ [TRAP 0]
 fExprMethod o = undefined
-    where l xs = map (\x -> LDC x) xs
+    where l xs = Prelude.map (\x -> LDC x) xs
 opCodes :: Map String Instr
 opCodes = fromList [ ("+", ADD), ("-", SUB),  ("*", MUL), ("/", DIV), ("%", MOD)
                    , ("<=", LE), (">=", GE),  ("<", LT),  (">", GT),  ("==", EQ)
