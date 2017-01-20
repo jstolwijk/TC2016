@@ -68,10 +68,10 @@ fExprOp :: Token -> (ValueOrAddress -> Code) -> (ValueOrAddress -> Code) -> Valu
 fExprOp (Operator "=") e1 e2 va = e2 Value ++ [LDS 0] ++ e1 Address ++ [STA 0]
 fExprOp (Operator op)  e1 e2 va = e1 Value ++ e2 Value ++ [opCodes ! op]
 
-fExprMethod :: Token -> (ValueOrAddress -> Code) -> ValueOrAddress -> Code
-fExprMethod (Operator "print") = undefined--fExprOp ++ [TRAP 0]
-fExprMethod o = undefined
-    where l xs = Prelude.map (\x -> LDC x) xs
+fExprMethod :: Token -> [ValueOrAddress -> Code] -> ValueOrAddress -> Code
+fExprMethod (LowerId "print") e1 v = concatMap (\x -> x Value) e1 ++ (replicate (length e1) (TRAP 0))
+fExprMethod (LowerId n) e1 v = concatMap (\x -> x Value) e1 ++ [Bsr n]
+
 opCodes :: Map String Instr
 opCodes = fromList [ ("+", ADD), ("-", SUB),  ("*", MUL), ("/", DIV), ("%", MOD)
                    , ("<=", LE), (">=", GE),  ("<", LT),  (">", GT),  ("==", EQ)

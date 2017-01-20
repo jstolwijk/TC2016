@@ -1,17 +1,18 @@
 class Hello
 {
-    
+    //testcomment
+    /*
+    asdasd
+    */
     void main()
     {
-        square(1)
+        m(7,12);
     }
     
-    int square( int x )
+    void m(int x, int y)
     {
-        int y;
-        y = x*x;
-        return y;   
+        p(x+37);
+        q(x*y);
     }
-
 
 }

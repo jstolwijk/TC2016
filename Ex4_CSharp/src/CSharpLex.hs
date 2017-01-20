@@ -57,8 +57,18 @@ terminals =
     ]
 
 
+lexCommentSpace :: Parser Char String
+lexCommentSpace = lexWhiteSpace <* many (lexComments <* lexWhiteSpace)
+
 lexWhiteSpace :: Parser Char String
-lexWhiteSpace = greedy(satisfy isSpace)
+lexWhiteSpace = greedy (satisfy isSpace)
+
+lexComments :: Parser Char String
+lexComments = singleLine <|> multiLine
+        where   singleLine = token "//" *> many (satisfy (/= '\n')) <* eol
+                multiLine  = token "/*" *> many anySymbol <* token "*/"
+                eol = token "\r\n" <|> token "\n"
+
 
 lexLowerId :: Parser Char Token
 lexLowerId = (\x xs -> LowerId (x:xs)) <$> satisfy isLower <*> greedy (satisfy isAlphaNum)
@@ -103,18 +113,10 @@ lexToken = greedyChoice
              , lexLowerId
              , lexUpperId
              ]
-{-
-lexOther :: Parser Char String
-lexOther = greedy (lexWhiteSpace <|> lexComment)
 
-lexComment :: Parser Char Char
-lexComment = (token "//" *> many anySymbol <* (token "\r\n" <|> token "\n") <|>
-             token "/*" *> many anySymbol <* token "*/") *> symbol 'a'
--}
 
 lexicalScanner :: Parser Char [Token]
-lexicalScanner = lexWhiteSpace *> greedy (lexToken <* lexWhiteSpace) <* eof --lexOther *> greedy (lexToken <* lexOther) <* eof
-
+lexicalScanner = lexCommentSpace *> greedy (lexToken <* lexCommentSpace) <* eof
 
 sStdType :: Parser Token Token
 sStdType = satisfy isStdType

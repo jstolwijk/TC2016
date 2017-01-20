@@ -41,7 +41,7 @@ processFile (infile, outfile) =
                 . foldCSharp codeAlgebra
                 . start (pClass <* eof)
                 . start lexicalScanner
-
+pe = processFile ("example.cs", "example.ssm")
 
 testLex infile =   do
               xs <- readFile infile
