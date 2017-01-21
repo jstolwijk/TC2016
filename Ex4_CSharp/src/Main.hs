@@ -43,7 +43,7 @@ processFile (infile, outfile) =
                 . start lexicalScanner
 pe = processFile ("example.cs", "example.ssm")
 
-testLex infile =   do
-              xs <- readFile infile
+testLex =   do
+              xs <- readFile "example.cs"
               putStrLn $ show (process xs)
   where process = start lexicalScanner

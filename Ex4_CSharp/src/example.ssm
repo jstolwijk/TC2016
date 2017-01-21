@@ -1,26 +1,8 @@
 	Bsr main
 	HALT
 main:
-	LDC 7
-	LDC 34
-	Bsr m
-	AJS -3
-	LDR R3
-	AJS -1
-	RET
-m:
-	LDL 37
-	LDC 37
+	LDC 2
+	LDC 3
 	ADD
-	Bsr p
-	AJS -2
-	LDR R3
-	AJS -1
-	LDL 37
-	LDL 37
-	MUL
-	Bsr q
-	AJS -2
-	LDR R3
 	AJS -1
 	RET
