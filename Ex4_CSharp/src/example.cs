@@ -1,12 +1,15 @@
-class MyClass
-{
-	void main ()
-	{
+class Hello {
+    void main() {
+        int a;
+        a = 0;
         int i;
         i = 0;
-		for(true){
+        while(i < 3){
+            print(i);
             i++;
         }
-	}
-
+        print(a);
+        print(i);
+    }
 }
+

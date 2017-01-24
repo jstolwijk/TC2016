@@ -7,7 +7,16 @@ main:
 	LDLA 37
 	STA 0
 	AJS -1
-	BRA 13
+	LDC 0
+	LDS 0
+	LDLA 37
+	STA 0
+	AJS -1
+	BRA 21
+	LDL 37
+	TRAP 0
+	LDR R3
+	AJS -1
 	LDL 37
 	LDC 1
 	ADD
@@ -15,7 +24,17 @@ main:
 	LDLA 37
 	STA 0
 	AJS -1
-	LDC 1
-	BRT -17
+	LDL 37
+	LDC 3
+	LT
+	BRT -28
+	LDL 37
+	TRAP 0
+	LDR R3
+	AJS -1
+	LDL 37
+	TRAP 0
+	LDR R3
+	AJS -1
 	UNLINK
 	RET

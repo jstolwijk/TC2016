@@ -22,7 +22,7 @@ codeAlgebra :: CSharpAlgebra Code Code (Environment -> Code) ParamEnv
 codeAlgebra =
     ( fClas
     , (fMembDecl, fMembMeth)
-    , (fStatDecl, fStatExpr, fStatIf, fStatWhile, fStatFor, fStatReturn, fStatBlock)
+    , (fStatDecl, fStatExpr, fStatIf, fStatWhile, fStatReturn, fStatBlock)
     , (fExprCon, fExprVar, fExprOp, fExprOpSingle, fExprMethod)
     )
 
@@ -34,8 +34,8 @@ fMembDecl d = []
 
 fMembMeth :: Type -> Token -> [Decl] -> (Environment -> Code) -> Code
 fMembMeth t (LowerId x) ps s = [LABEL x, LINK 0] ++ s env ++ [UNLINK, RET]
-    where  env = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [(-(length ps) - 1)..]
-
+    where  env = fromList $ zip [x | (Decl _ (LowerId x)) <- ps] [l - 1 .. l + l]
+           l = (-(length ps) - 1)
 fStatDecl :: Decl -> (Environment -> Code)
 fStatDecl d env = []
 
@@ -54,7 +54,6 @@ fStatWhile e s1 env = [BRA n] ++ (s1 env) ++ c ++ [BRT (-(n + k + 2))]
             c = e Value env
             (n, k) = (codeSize (s1 env), codeSize c)
 
-fStatFor = undefined
 
 fStatReturn :: ParamEnv -> (Environment -> Code)
 fStatReturn e env = e Value env ++ [STR R3, UNLINK, RET]
