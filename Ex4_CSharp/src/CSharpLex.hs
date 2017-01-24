@@ -13,6 +13,7 @@ data Token = POpen    | PClose      -- parentheses     ()
            | Comma    | Semicolon
            | KeyIf    | KeyElse
            | KeyWhile | KeyReturn
+           | KeyFor -- for
            | KeyTry   | KeyCatch
            | KeyClass | KeyVoid
            | StdType   String       -- the 8 standard types
@@ -49,6 +50,7 @@ terminals =
     , ( KeyIf     , "if"     )
     , ( KeyElse   , "else"   )
     , ( KeyWhile  , "while"  )
+    , ( KeyFor    , "for"    ) --for loop
     , ( KeyReturn , "return" )
     , ( KeyTry    , "try"    )
     , ( KeyCatch  , "catch"  )
@@ -99,7 +101,7 @@ stdTypes :: [String]
 stdTypes = ["int", "long", "double", "float", "byte", "short", "bool", "char"]
 
 operators :: [String]
-operators = ["+=", "-=", "*=", "\\=", "+", "-", "*", "/", "%", "&&", "||", "^", "<=", "<", ">=", ">", "==", "!=", "="]
+operators = ["+=", "-=", "*=", "/=", "++", "--", "+", "-", "*", "/", "%", "&&", "||", "^", "<=", "<", ">=", ">", "==", "!=", "="]
 
 
 lexToken :: Parser Char Token

@@ -15,6 +15,7 @@ type CSharpAlgebra clas memb stat expr
          , expr                  -> stat
          , expr -> stat -> stat  -> stat
          , expr -> stat          -> stat
+         , expr -> expr -> expr -> stat -> stat
          , expr                  -> stat
          , [stat]                -> stat
          )
@@ -22,13 +23,14 @@ type CSharpAlgebra clas memb stat expr
       ,  ( Token                  -> expr
          , Token                  -> expr
          , Token -> expr -> expr  -> expr
+         , Token -> expr          -> expr
          , Token -> [expr]        -> expr
          )
       )
 
 
 foldCSharp :: CSharpAlgebra clas memb stat expr -> Class -> clas
-foldCSharp (c1, (m1,m2), (s1,s2,s3,s4,s5,s6), (e1,e2,e3,e4)) = fClas
+foldCSharp (c1, (m1,m2), (s1,s2,s3,s4,s5,s6,s7), (e1,e2,e3,e4,e5)) = fClas
     where
         fClas (Class      c ms)     = c1 c (map fMemb ms)
         fMemb (MemberD    d)        = m1 d
@@ -37,9 +39,11 @@ foldCSharp (c1, (m1,m2), (s1,s2,s3,s4,s5,s6), (e1,e2,e3,e4)) = fClas
         fStat (StatExpr   e)        = s2 (fExpr e)
         fStat (StatIf     e s1 s2)  = s3 (fExpr e) (fStat s1) (fStat s2)
         fStat (StatWhile  e s1)     = s4 (fExpr e) (fStat s1)
-        fStat (StatReturn e)        = s5 (fExpr e)
-        fStat (StatBlock  ss)       = s6 (map fStat ss)
+        fStat (StatFor    e1 e2 e3 s1)     = s5 (fExpr e1) (fExpr e2) (fExpr e3) (fStat s1)
+        fStat (StatReturn e)        = s6 (fExpr e)
+        fStat (StatBlock  ss)       = s7 (map fStat ss)
         fExpr (ExprConst  con)      = e1 con
         fExpr (ExprVar    var)      = e2 var
         fExpr (ExprOper   op e1 e2) = e3 op (fExpr e1) (fExpr e2)
-        fExpr (ExprMethod m es)     = e4 m (map fExpr es)
+        fExpr (ExprOperSingle op e1) = e4 op (fExpr e1)
+        fExpr (ExprMethod m es)     = e5 m (map fExpr es)

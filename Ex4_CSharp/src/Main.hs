@@ -43,7 +43,15 @@ processFile (infile, outfile) =
                 . start lexicalScanner
 pe = processFile ("example.cs", "example.ssm")
 
-testLex =   do
+readf f =   do
               xs <- readFile "example.cs"
-              putStrLn $ show (process xs)
-  where process = start lexicalScanner
+              putStrLn $ show (f xs)
+
+ha = readf $ start (pClass <* eof)
+                . start lexicalScanner
+
+h = readf $ start lexicalScanner
+{-
+pa = readf $ foldCSharp printAlgebra
+                . start (pClass <* eof)
+                . start lexicalScanner-}

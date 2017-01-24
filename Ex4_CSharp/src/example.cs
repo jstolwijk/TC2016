@@ -1,6 +1,12 @@
-class Hello {
-    void main() {
-        print(2 + 3);
+class MyClass
+{
+	void main ()
+	{
+        int i;
+        i = 0;
+		for(true){
+            i++;
+        }
+	}
 
-    }
 }
